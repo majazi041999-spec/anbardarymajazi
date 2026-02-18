@@ -18,6 +18,25 @@ public sealed class InventoryStore
         }
     }
 
+    public IReadOnlyList<LowStockItemResponse> GetLowStockItems()
+    {
+        lock (_lock)
+        {
+            return _items
+                .Where(x => x.CurrentStock <= x.MinStockLevel)
+                .OrderBy(x => x.CurrentStock)
+                .Select(x => new LowStockItemResponse(
+                    x.Id,
+                    x.Code,
+                    x.Name,
+                    x.Unit,
+                    x.CurrentStock,
+                    x.MinStockLevel,
+                    Math.Max(0, x.MinStockLevel - x.CurrentStock)))
+                .ToList();
+        }
+    }
+
     public Item? GetItem(Guid id)
     {
         lock (_lock)
@@ -80,7 +99,7 @@ public sealed class InventoryStore
 
             if (!item.TryDecreaseStock(quantity))
             {
-                return AddIssueResult.InsufficientStock;
+                return AddIssueResult.InsufficientStock(item);
             }
 
             var issue = new StockIssue
@@ -112,6 +131,73 @@ public sealed class InventoryStore
         }
     }
 
+    public IReadOnlyList<StockMovementResponse> GetItemMovements(Guid itemId, int take)
+    {
+        lock (_lock)
+        {
+            var item = _items.FirstOrDefault(x => x.Id == itemId);
+            if (item is null)
+            {
+                return [];
+            }
+
+            var receiptMovements = _receipts
+                .Where(x => x.ItemId == itemId)
+                .Select(x => new StockMovementResponse(
+                    itemId,
+                    item.Name,
+                    "receipt",
+                    x.Quantity,
+                    x.SupplierName,
+                    x.ReferenceNo,
+                    x.CreatedAtUtc));
+
+            var issueMovements = _issues
+                .Where(x => x.ItemId == itemId)
+                .Select(x => new StockMovementResponse(
+                    itemId,
+                    item.Name,
+                    "issue",
+                    x.Quantity,
+                    x.DepartmentName,
+                    x.ReferenceNo,
+                    x.CreatedAtUtc));
+
+            return receiptMovements
+                .Concat(issueMovements)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .Take(take)
+                .ToList();
+        }
+    }
+
+    public IReadOnlyList<DailyTrendPointResponse> GetDailyTrend(int days)
+    {
+        lock (_lock)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var from = today.AddDays(-days + 1);
+
+            var receiptMap = _receipts
+                .GroupBy(x => DateOnly.FromDateTime(x.CreatedAtUtc))
+                .ToDictionary(x => x.Key, x => x.Sum(y => y.Quantity));
+
+            var issueMap = _issues
+                .GroupBy(x => DateOnly.FromDateTime(x.CreatedAtUtc))
+                .ToDictionary(x => x.Key, x => x.Sum(y => y.Quantity));
+
+            var result = new List<DailyTrendPointResponse>();
+            for (var date = from; date <= today; date = date.AddDays(1))
+            {
+                receiptMap.TryGetValue(date, out var receiptQty);
+                issueMap.TryGetValue(date, out var issueQty);
+                result.Add(new DailyTrendPointResponse(date, receiptQty, issueQty));
+            }
+
+            return result;
+        }
+    }
+
     public DashboardSummaryResponse GetDashboardSummary()
     {
         lock (_lock)
@@ -126,10 +212,9 @@ public sealed class InventoryStore
     }
 }
 
-
 public sealed record AddIssueResult(StockIssue? Issue, Item? Item, bool IsNotFound, bool IsInsufficientStock)
 {
     public static AddIssueResult NotFound => new(null, null, true, false);
-    public static AddIssueResult InsufficientStock => new(null, null, false, true);
+    public static AddIssueResult InsufficientStock(Item item) => new(null, item, false, true);
     public static AddIssueResult Success(StockIssue issue, Item item) => new(issue, item, false, false);
 }

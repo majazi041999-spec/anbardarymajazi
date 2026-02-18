@@ -12,11 +12,22 @@ public static class ItemEndpoints
 
         group.MapGet("/", (InventoryStore store) =>
         {
-            var response = store
-                .GetItems()
-                .Select(ToResponse);
-
+            var response = store.GetItems().Select(ToResponse);
             return Results.Ok(response);
+        });
+
+        group.MapGet("/low-stock", (InventoryStore store) => Results.Ok(store.GetLowStockItems()));
+
+        group.MapGet("/{itemId:guid}/movements", (Guid itemId, InventoryStore store, int take = 50) =>
+        {
+            var item = store.GetItem(itemId);
+            if (item is null)
+            {
+                return Results.NotFound(new { message = "کالای انتخاب‌شده پیدا نشد." });
+            }
+
+            take = Math.Clamp(take, 1, 200);
+            return Results.Ok(store.GetItemMovements(itemId, take));
         });
 
         group.MapPost("/", (CreateItemRequest request, InventoryStore store) =>
@@ -41,7 +52,6 @@ public static class ItemEndpoints
             };
 
             store.AddItem(item);
-
             return Results.Created($"/api/items/{item.Id}", ToResponse(item));
         });
 

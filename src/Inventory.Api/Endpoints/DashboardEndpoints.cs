@@ -8,9 +8,12 @@ public static class DashboardEndpoints
     {
         var group = app.MapGroup("/api/dashboard").WithTags("Dashboard");
 
-        group.MapGet("/summary", (InventoryStore store) =>
+        group.MapGet("/summary", (InventoryStore store) => Results.Ok(store.GetDashboardSummary()));
+
+        group.MapGet("/trend", (InventoryStore store, int days = 14) =>
         {
-            return Results.Ok(store.GetDashboardSummary());
+            days = Math.Clamp(days, 1, 90);
+            return Results.Ok(store.GetDailyTrend(days));
         });
 
         return app;

@@ -23,12 +23,15 @@
 ## APIهای پیاده‌سازی‌شده (MVP)
 - `GET /health`
 - `GET /api/items`
+- `GET /api/items/low-stock`
+- `GET /api/items/{itemId}/movements?take=50`
 - `POST /api/items`
 - `GET /api/receipts/recent`
 - `POST /api/receipts`
 - `GET /api/issues/recent`
 - `POST /api/issues`
 - `GET /api/dashboard/summary`
+- `GET /api/dashboard/trend?days=14`
 
 ## نکته مهم
 در این محیط اجرایی، `dotnet` نصب نیست؛ بنابراین امکان Build/Run واقعی داخل همین کانتینر وجود نداشت.

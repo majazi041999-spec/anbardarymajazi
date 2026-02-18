@@ -50,7 +50,11 @@ public static class IssueEndpoints
 
             if (result.IsInsufficientStock)
             {
-                return Results.BadRequest(new { message = "موجودی کافی نیست." });
+                return Results.BadRequest(new
+                {
+                    message = "موجودی کافی نیست.",
+                    currentStock = result.Item?.CurrentStock ?? 0
+                });
             }
 
             var issue = result.Issue!;
