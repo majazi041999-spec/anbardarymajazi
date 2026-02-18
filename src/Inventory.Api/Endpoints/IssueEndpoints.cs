@@ -3,25 +3,25 @@ using Inventory.Api.Infrastructure;
 
 namespace Inventory.Api.Endpoints;
 
-public static class ReceiptEndpoints
+public static class IssueEndpoints
 {
-    public static IEndpointRouteBuilder MapReceiptEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapIssueEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/receipts").WithTags("Receipts");
+        var group = app.MapGroup("/api/issues").WithTags("Issues");
 
         group.MapGet("/recent", (InventoryStore store) =>
         {
             var response = store
-                .GetRecentReceipts(20)
+                .GetRecentIssues(20)
                 .Select(x =>
                 {
                     var item = store.GetItem(x.ItemId);
-                    return new ReceiptResponse(
+                    return new IssueResponse(
                         x.Id,
                         x.ItemId,
                         item?.Name ?? "-",
                         x.Quantity,
-                        x.SupplierName,
+                        x.DepartmentName,
                         x.ReferenceNo,
                         x.CreatedAtUtc);
                 });
@@ -29,7 +29,7 @@ public static class ReceiptEndpoints
             return Results.Ok(response);
         });
 
-        group.MapPost("/", (CreateReceiptRequest request, InventoryStore store) =>
+        group.MapPost("/", (CreateIssueRequest request, InventoryStore store) =>
         {
             var errors = Validate(request);
             if (errors.Count > 0)
@@ -37,34 +37,40 @@ public static class ReceiptEndpoints
                 return Results.ValidationProblem(errors);
             }
 
-            var result = store.AddReceipt(
+            var result = store.AddIssue(
                 request.ItemId,
                 request.Quantity,
-                request.SupplierName.Trim(),
+                request.DepartmentName.Trim(),
                 request.ReferenceNo.Trim());
 
-            if (result is null)
+            if (result.IsNotFound)
             {
                 return Results.NotFound(new { message = "کالای انتخاب‌شده پیدا نشد." });
             }
 
-            var (receipt, item) = result.Value;
-            var response = new ReceiptResponse(
-                receipt.Id,
-                receipt.ItemId,
-                item.Name,
-                receipt.Quantity,
-                receipt.SupplierName,
-                receipt.ReferenceNo,
-                receipt.CreatedAtUtc);
+            if (result.IsInsufficientStock)
+            {
+                return Results.BadRequest(new { message = "موجودی کافی نیست." });
+            }
 
-            return Results.Created($"/api/receipts/{receipt.Id}", response);
+            var issue = result.Issue!;
+            var item = result.Item!;
+            var response = new IssueResponse(
+                issue.Id,
+                issue.ItemId,
+                item.Name,
+                issue.Quantity,
+                issue.DepartmentName,
+                issue.ReferenceNo,
+                issue.CreatedAtUtc);
+
+            return Results.Created($"/api/issues/{issue.Id}", response);
         });
 
         return app;
     }
 
-    private static Dictionary<string, string[]> Validate(CreateReceiptRequest request)
+    private static Dictionary<string, string[]> Validate(CreateIssueRequest request)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -78,9 +84,9 @@ public static class ReceiptEndpoints
             errors["quantity"] = ["تعداد باید بزرگتر از صفر باشد."];
         }
 
-        if (string.IsNullOrWhiteSpace(request.SupplierName))
+        if (string.IsNullOrWhiteSpace(request.DepartmentName))
         {
-            errors["supplierName"] = ["نام تامین‌کننده اجباری است."];
+            errors["departmentName"] = ["نام واحد دریافت‌کننده اجباری است."];
         }
 
         if (string.IsNullOrWhiteSpace(request.ReferenceNo))
