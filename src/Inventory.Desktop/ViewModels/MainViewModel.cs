@@ -12,11 +12,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public ObservableCollection<Item> Items { get; }
     public ObservableCollection<Activity> Activities { get; }
+    public ObservableCollection<Item> LowStockItems { get; }
 
     public MainViewModel()
     {
-        Items = new ObservableCollection<Item>(_service.Items);
+        Items = new ObservableCollection<Item>(_service.Items.OrderBy(x => x.Name));
         Activities = new ObservableCollection<Activity>(_service.Activities);
+        LowStockItems = new ObservableCollection<Item>(_service.Items.Where(x => x.Stock <= x.MinStock));
         SelectedItem = Items.FirstOrDefault();
     }
 
@@ -34,38 +36,67 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public int DashboardItemsCount => Items.Count;
     public int DashboardTotalStock => Items.Sum(x => x.Stock);
-    public int DashboardLowStockCount => Items.Count(x => x.Stock <= x.MinStock);
+    public int DashboardLowStockCount => LowStockItems.Count;
 
-    public void CreateItem()
+    public string CreateItem()
     {
-        _service.AddItem(NewCode, NewName, NewUnit, NewMinStock);
+        var result = _service.AddItem(NewCode, NewName, NewUnit, NewMinStock);
         Reload();
+        return result.message;
     }
 
-    public bool CreateIssue(int qty, string dep)
+    public string CreateIssue(int qty, string dep)
     {
-        if (SelectedItem is null) return false;
-        var ok = _service.AddIssue(SelectedItem.Id, qty, dep);
+        if (SelectedItem is null) return "ابتدا یک کالا انتخاب کنید.";
+        var result = _service.AddIssue(SelectedItem.Id, qty, dep);
         Reload();
-        return ok;
+        return result.message;
     }
 
-    public void CreateReceipt(int qty, string supplier)
+    public string CreateReceipt(int qty, string supplier)
     {
-        if (SelectedItem is null) return;
-        _service.AddReceipt(SelectedItem.Id, qty, supplier);
+        if (SelectedItem is null) return "ابتدا یک کالا انتخاب کنید.";
+        var result = _service.AddReceipt(SelectedItem.Id, qty, supplier);
         Reload();
+        return result.message;
+    }
+
+    public string ImportCsv(string path)
+    {
+        var result = _service.ImportFromCsv(path);
+        Reload();
+
+        var msg = $"ایمپورت انجام شد | جدید: {result.imported} | بروزرسانی: {result.updated} | رد شده: {result.skipped}";
+        if (result.errors.Count > 0)
+            msg += $" | خطا: {result.errors[0]}";
+
+        return msg;
+    }
+
+    public string ImportAccessFolder(string folderPath)
+    {
+        var msg = _service.ImportAccessFolder(folderPath);
+        Reload();
+        return msg;
     }
 
     private void Reload()
     {
+        var currentSelectedId = SelectedItem?.Id;
+
         Items.Clear();
         foreach (var item in _service.Items.OrderBy(x => x.Name))
             Items.Add(item);
 
+        LowStockItems.Clear();
+        foreach (var item in _service.Items.Where(x => x.Stock <= x.MinStock).OrderBy(x => x.Stock))
+            LowStockItems.Add(item);
+
         Activities.Clear();
-        foreach (var act in _service.Activities.Take(20))
+        foreach (var act in _service.Activities.Take(40))
             Activities.Add(act);
+
+        SelectedItem = Items.FirstOrDefault(x => x.Id == currentSelectedId) ?? Items.FirstOrDefault();
 
         OnPropertyChanged(nameof(DashboardItemsCount));
         OnPropertyChanged(nameof(DashboardTotalStock));

@@ -83,6 +83,31 @@ dotnet run --project src/Inventory.Desktop/Inventory.Desktop.csproj
 ```
 
 
+### ایمپورت دیتابیس اکسس (CSV Export)
+در نسخه دسکتاپ یک دکمه **«ایمپورت CSV از خروجی Access»** اضافه شده است.
+
+فرمت پیشنهادی CSV:
+- `Code` یا `کد`
+- `Name` یا `نام`
+- (اختیاری) `Unit` یا `واحد`
+- (اختیاری) `MinStock`
+- (اختیاری) `Stock` یا `Quantity`
+
+پس از ایمپورت، برنامه موارد جدید را اضافه می‌کند و موارد موجود (بر اساس کد کالا) را بروزرسانی می‌کند.
+
+
+### ایمپورت حرفه‌ای خروجی Access (پوشه CSVها)
+اگر از Access چند جدول را CSV گرفته‌اید، در نسخه دسکتاپ دکمه **«ایمپورت پوشه کامل Access»** را بزنید.
+این مسیر به‌صورت خودکار دنبال فایل‌های زیر می‌گردد:
+- `Tbl_Product*.csv` (اقلام کالا)
+- `Tbl_Trans_Detail*.csv` (برای ورود/گردش مثبت موجودی)
+- `Tbl_Output_Detail*.csv` (برای خروج/گردش منفی موجودی)
+
+ستون‌های مهمی که پشتیبانی می‌شوند:
+- محصول: `Product_Code`, `Product_Description`, `Product_Unit`, `Product_Price`, `Product_qty`, `Product_First_qty`
+- همچنین معادل‌های عمومی: `Code`, `Name`, `Unit`, `MinStock`, `Stock/Quantity`
+
+
 > نکته: از داخل خود UI می‌توانید آدرس API را ذخیره کنید. پیش‌فرض `http://localhost:5000` است.
 
 

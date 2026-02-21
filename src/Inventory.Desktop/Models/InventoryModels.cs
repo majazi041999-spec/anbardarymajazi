@@ -8,6 +8,9 @@ public sealed class Item
     public string Unit { get; set; } = "عدد";
     public int MinStock { get; set; }
     public int Stock { get; set; }
+    public decimal Price { get; set; }
+    public string GroupName { get; set; } = string.Empty;
+    public string LocationName { get; set; } = string.Empty;
 }
 
 public sealed class Activity
