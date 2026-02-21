@@ -32,6 +32,8 @@
 
 ## APIهای پیاده‌سازی‌شده (MVP)
 - `GET /health`
+
+- اگر صفحه اصلی (`/`) را باز کنید و 404 ببینید، یعنی API صفحه HTML ندارد. در نسخه فعلی، `/` به `/swagger` ریدایرکت می‌شود تا تست API راحت باشد.
 - `GET /api/items`
 - `GET /api/items/low-stock`
 - `GET /api/items/{itemId}/movements?take=50`
