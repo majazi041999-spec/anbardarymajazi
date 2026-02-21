@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>سامانه انبارداری اداری</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="bg-blur b1"></div>
+  <div class="bg-blur b2"></div>
+  <div class="bg-blur b3"></div>
+
+  <main class="container">
+    <header class="glass card hero">
+      <div>
+        <h1>سامانه انبارداری اداری</h1>
+        <p>رابط ساده برای ثبت رسید، حواله خروج و مشاهده آمار لحظه‌ای</p>
+      </div>
+      <div class="status" id="apiStatus">در حال بررسی ارتباط با API...</div>
+    </header>
+
+    <section class="glass card api-config">
+      <h2>تنظیمات اتصال API</h2>
+      <form id="apiConfigForm" class="form inline-form">
+        <label>آدرس API
+          <input id="apiBaseInput" name="apiBase" placeholder="http://localhost:5000" />
+        </label>
+        <button type="submit">ذخیره آدرس</button>
+      </form>
+    </section>
+
+    <section class="grid stats" id="statsCards">
+      <article class="glass card"><h3>تعداد اقلام</h3><strong id="itemsCount">-</strong></article>
+      <article class="glass card"><h3>موجودی کل</h3><strong id="totalStock">-</strong></article>
+      <article class="glass card"><h3>اقلام بحرانی</h3><strong id="lowStock">-</strong></article>
+      <article class="glass card"><h3>عملیات ۷ روز اخیر</h3><strong id="ops7Days">-</strong></article>
+    </section>
+
+    <section class="grid two-col">
+      <article class="glass card">
+        <h2>ثبت کالای جدید</h2>
+        <form id="itemForm" class="form">
+          <label>کد کالا<input name="code" required /></label>
+          <label>نام کالا<input name="name" required /></label>
+          <label>واحد سنجش<input name="unit" value="عدد" /></label>
+          <label>حداقل موجودی<input name="minStockLevel" type="number" min="0" value="0" /></label>
+          <button type="submit">ثبت کالا</button>
+        </form>
+      </article>
+
+      <article class="glass card">
+        <h2>ثبت رسید انبار</h2>
+        <form id="receiptForm" class="form">
+          <label>انتخاب کالا
+            <select id="receiptItemSelect" name="itemId" required>
+              <option value="">ابتدا یک کالا انتخاب کنید</option>
+            </select>
+          </label>
+          <label>تعداد<input name="quantity" type="number" min="1" required /></label>
+          <label>تامین‌کننده
+            <div class="inline-pair">
+              <select id="supplierSelect" name="supplierName" required>
+                <option value="">انتخاب تامین‌کننده...</option>
+              </select>
+              <input id="newSupplierInput" placeholder="افزودن تامین‌کننده جدید" />
+              <button type="button" id="addSupplierBtn" class="secondary">افزودن</button>
+            </div>
+          </label>
+          <label>شماره سند<input name="referenceNo" required /></label>
+          <button type="submit">ثبت رسید</button>
+        </form>
+      </article>
+    </section>
+
+    <section class="grid two-col">
+      <article class="glass card">
+        <h2>ثبت حواله خروج</h2>
+        <form id="issueForm" class="form">
+          <label>انتخاب کالا
+            <select id="issueItemSelect" name="itemId" required>
+              <option value="">ابتدا یک کالا انتخاب کنید</option>
+            </select>
+          </label>
+          <label>تعداد<input name="quantity" type="number" min="1" required /></label>
+          <label>واحد دریافت‌کننده
+            <div class="inline-pair">
+              <select id="departmentSelect" name="departmentName" required>
+                <option value="">انتخاب واحد...</option>
+              </select>
+              <input id="newDepartmentInput" placeholder="افزودن واحد جدید" />
+              <button type="button" id="addDepartmentBtn" class="secondary">افزودن</button>
+            </div>
+          </label>
+          <label>شماره سند<input name="referenceNo" required /></label>
+          <button type="submit">ثبت حواله</button>
+        </form>
+      </article>
+
+      <article class="glass card">
+        <h2>اقلام بحرانی</h2>
+        <ul id="lowStockList" class="list"></ul>
+      </article>
+    </section>
+
+
+    <section class="glass card">
+      <h2>فعالیت‌های اخیر انبار</h2>
+      <div class="table-wrap">
+        <table class="activity-table">
+          <thead>
+            <tr>
+              <th>زمان</th>
+              <th>نوع</th>
+              <th>کالا</th>
+              <th>تعداد</th>
+              <th>طرف/واحد</th>
+            </tr>
+          </thead>
+          <tbody id="activityTableBody">
+            <tr><td colspan="5">در حال بارگذاری...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="glass card">
+      <h2>راهنمای سریع کاربر</h2>
+      <ol>
+        <li>ابتدا کالا را ثبت کنید.</li>
+        <li>با رسید انبار موجودی را افزایش دهید.</li>
+        <li>در زمان تحویل، حواله خروج ثبت کنید.</li>
+        <li>همیشه کارت «اقلام بحرانی» را بررسی کنید.</li>
+      </ol>
+      <pre id="logBox" class="log"></pre>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
