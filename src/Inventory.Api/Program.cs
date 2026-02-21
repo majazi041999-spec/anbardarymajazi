@@ -20,5 +20,6 @@ app.MapItemEndpoints();
 app.MapReceiptEndpoints();
 app.MapIssueEndpoints();
 app.MapDashboardEndpoints();
+app.MapMasterDataEndpoints();
 
 app.Run();

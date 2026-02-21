@@ -16,6 +16,12 @@ public static class DashboardEndpoints
             return Results.Ok(store.GetDailyTrend(days));
         });
 
+        group.MapGet("/activity", (InventoryStore store, int take = 20) =>
+        {
+            take = Math.Clamp(take, 1, 100);
+            return Results.Ok(store.GetRecentActivities(take));
+        });
+
         return app;
     }
 }

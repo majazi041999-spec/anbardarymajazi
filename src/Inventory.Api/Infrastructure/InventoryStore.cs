@@ -8,6 +8,12 @@ public sealed class InventoryStore
     private readonly List<Item> _items = [];
     private readonly List<StockReceipt> _receipts = [];
     private readonly List<StockIssue> _issues = [];
+    private readonly List<NamedEntity> _suppliers = [
+        new NamedEntity { Name = "تامین‌کننده پیش‌فرض" }
+    ];
+    private readonly List<NamedEntity> _departments = [
+        new NamedEntity { Name = "واحد اداری" }
+    ];
     private readonly object _lock = new();
 
     public IReadOnlyList<Item> GetItems()
@@ -34,6 +40,55 @@ public sealed class InventoryStore
                     x.MinStockLevel,
                     Math.Max(0, x.MinStockLevel - x.CurrentStock)))
                 .ToList();
+        }
+    }
+
+
+    public IReadOnlyList<NamedEntity> GetSuppliers()
+    {
+        lock (_lock)
+        {
+            return _suppliers.OrderBy(x => x.Name).ToList();
+        }
+    }
+
+    public IReadOnlyList<NamedEntity> GetDepartments()
+    {
+        lock (_lock)
+        {
+            return _departments.OrderBy(x => x.Name).ToList();
+        }
+    }
+
+    public NamedEntity AddSupplier(string name)
+    {
+        lock (_lock)
+        {
+            var existing = _suppliers.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (existing is not null)
+            {
+                return existing;
+            }
+
+            var entity = new NamedEntity { Name = name };
+            _suppliers.Add(entity);
+            return entity;
+        }
+    }
+
+    public NamedEntity AddDepartment(string name)
+    {
+        lock (_lock)
+        {
+            var existing = _departments.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (existing is not null)
+            {
+                return existing;
+            }
+
+            var entity = new NamedEntity { Name = name };
+            _departments.Add(entity);
+            return entity;
         }
     }
 
@@ -73,6 +128,7 @@ public sealed class InventoryStore
             }
 
             item.IncreaseStock(quantity);
+            AddSupplier(supplierName);
 
             var receipt = new StockReceipt
             {
@@ -101,6 +157,8 @@ public sealed class InventoryStore
             {
                 return AddIssueResult.InsufficientStock(item);
             }
+
+            AddDepartment(departmentName);
 
             var issue = new StockIssue
             {
@@ -165,6 +223,39 @@ public sealed class InventoryStore
 
             return receiptMovements
                 .Concat(issueMovements)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .Take(take)
+                .ToList();
+        }
+    }
+
+
+    public IReadOnlyList<StockMovementResponse> GetRecentActivities(int take)
+    {
+        lock (_lock)
+        {
+            var itemNameMap = _items.ToDictionary(x => x.Id, x => x.Name);
+
+            var receipts = _receipts.Select(x => new StockMovementResponse(
+                x.ItemId,
+                itemNameMap.GetValueOrDefault(x.ItemId, "-"),
+                "receipt",
+                x.Quantity,
+                x.SupplierName,
+                x.ReferenceNo,
+                x.CreatedAtUtc));
+
+            var issues = _issues.Select(x => new StockMovementResponse(
+                x.ItemId,
+                itemNameMap.GetValueOrDefault(x.ItemId, "-"),
+                "issue",
+                x.Quantity,
+                x.DepartmentName,
+                x.ReferenceNo,
+                x.CreatedAtUtc));
+
+            return receipts
+                .Concat(issues)
                 .OrderByDescending(x => x.CreatedAtUtc)
                 .Take(take)
                 .ToList();
