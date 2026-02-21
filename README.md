@@ -10,6 +10,7 @@
 - ماژول «حواله خروج (تحویل به واحدها)» با کنترل موجودی ناکافی
 - داشبورد خلاصه آماری + روند زمانی + اقلام بحرانی + فعالیت‌های اخیر
 - UI اولیه با طراحی **Glassmorphism** در مسیر `ui/` (RTL فارسی + UX ساده)
+- اپلیکیشن ویندوزی WPF (`Inventory.Desktop`) برای اجرای مستقیم به‌صورت EXE
 - امکان تنظیم آدرس API از داخل UI بدون نیاز به ویرایش کد
 - مدیریت داده‌های پایه (تامین‌کننده/واحد) از داخل UI
 
@@ -21,6 +22,10 @@
   - `Domain/*.cs`
   - `Infrastructure/InventoryStore.cs`
   - `Contracts/*.cs`
+- `src/Inventory.Desktop`
+  - `MainWindow.xaml`
+  - `ViewModels/MainViewModel.cs`
+  - `Services/InventoryService.cs`
 - `ui/`
   - `index.html`
   - `styles.css`
@@ -66,6 +71,18 @@ dotnet run --project src/Inventory.Api/Inventory.Api.csproj
 ### اجرای UI Glassmorphism
 فایل `ui/index.html` را در مرورگر باز کنید.
 
+
+### اجرای نسخه ویندوزی (WPF)
+در Visual Studio:
+1. روی پروژه `Inventory.Desktop` راست‌کلیک کنید و `Set as Startup Project` بزنید.
+2. `F5` بزنید تا برنامه دسکتاپ اجرا شود.
+
+با CLI:
+```bash
+dotnet run --project src/Inventory.Desktop/Inventory.Desktop.csproj
+```
+
+
 > نکته: از داخل خود UI می‌توانید آدرس API را ذخیره کنید. پیش‌فرض `http://localhost:5000` است.
 
 
@@ -94,9 +111,14 @@ dotnet restore
 - اگر هنوز روی `/` خطای 404 می‌بینید، احتمالاً Visual Studio خروجی قدیمی را اجرا می‌کند. یک‌بار Solution را ببندید، پوشه‌های `bin` و `obj` و `.vs` را پاک کنید، سپس `dotnet restore` و Rebuild بزنید.
 
 ## ساخت EXE (Self-contained)
-### روش مستقیم
+### روش مستقیم (API)
 ```bash
 dotnet publish src/Inventory.Api/Inventory.Api.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+```
+
+### روش مستقیم (Desktop EXE)
+```bash
+dotnet publish src/Inventory.Desktop/Inventory.Desktop.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
 ```
 
 ### روش اسکریپتی
