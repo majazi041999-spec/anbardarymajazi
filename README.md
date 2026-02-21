@@ -75,6 +75,20 @@ docker run --rm -p 5000:5000 inventory-api
 
 > سپس UI را باز کنید و آدرس API را روی `http://localhost:5000` بگذارید.
 
+
+## رفع خطاهای رایج Visual Studio
+اگر خطاهای زیر را دیدید:
+- `AddSwaggerGen` یافت نشد
+- `UseSwagger` / `UseSwaggerUI` یافت نشد
+
+مطمئن شوید Restore انجام شده و پکیج `Swashbuckle.AspNetCore` نصب است (در csproj اضافه شده):
+```bash
+dotnet restore
+```
+
+اگر بعد از Build خطای پیدا نشدن `Inventory.Api.exe` دیدید، معمولاً به‌دلیل شکست Build است.
+ابتدا خطاهای کامپایل را رفع کنید، سپس دوباره `F5` بزنید.
+
 ## ساخت EXE (Self-contained)
 ### روش مستقیم
 ```bash
