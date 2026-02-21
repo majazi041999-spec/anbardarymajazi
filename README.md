@@ -32,6 +32,8 @@
 
 ## APIهای پیاده‌سازی‌شده (MVP)
 - `GET /health`
+
+- اگر صفحه اصلی (`/`) را باز کنید و 404 ببینید، یعنی API صفحه HTML ندارد. در نسخه فعلی، `/` به `/swagger` ریدایرکت می‌شود تا تست API راحت باشد.
 - `GET /api/items`
 - `GET /api/items/low-stock`
 - `GET /api/items/{itemId}/movements?take=50`
@@ -88,6 +90,8 @@ dotnet restore
 
 اگر بعد از Build خطای پیدا نشدن `Inventory.Api.exe` دیدید، معمولاً به‌دلیل شکست Build است.
 ابتدا خطاهای کامپایل را رفع کنید، سپس دوباره `F5` بزنید.
+
+- اگر هنوز روی `/` خطای 404 می‌بینید، احتمالاً Visual Studio خروجی قدیمی را اجرا می‌کند. یک‌بار Solution را ببندید، پوشه‌های `bin` و `obj` و `.vs` را پاک کنید، سپس `dotnet restore` و Rebuild بزنید.
 
 ## ساخت EXE (Self-contained)
 ### روش مستقیم

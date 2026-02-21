@@ -15,11 +15,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.MapGet("/", () => Results.Redirect("/swagger"));
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapItemEndpoints();
 app.MapReceiptEndpoints();
 app.MapIssueEndpoints();
 app.MapDashboardEndpoints();
 app.MapMasterDataEndpoints();
+app.MapFallback(() => Results.Redirect("/swagger"));
 
 app.Run();
